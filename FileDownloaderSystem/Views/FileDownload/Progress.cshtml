@@ -1,0 +1,133 @@
+﻿
+@{
+    ViewData["Title"] = "Progress";
+}
+
+@section Styles
+    {
+    <style>
+        /*Event Logs*/
+        #events {
+            background-color: rgba(191, 191, 191, 0.15);
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+            #events > div {
+                padding-bottom: 5px;
+            }
+
+                #events > div:after {
+                    content: "";
+                    display: table;
+                    clear: both;
+                }
+
+            #events #clear {
+                float: right;
+            }
+
+            #events .caption {
+                float: left;
+                font-weight: bold;
+                font-size: 115%;
+                line-height: 115%;
+                padding-top: 7px;
+            }
+
+            #events ul {
+                list-style: none;
+                max-height: 300px;
+                overflow: auto;
+                margin: 0;
+            }
+
+                #events ul li {
+                    padding: 7px 0;
+                    border-bottom: 1px solid #dddddd;
+                }
+
+                    #events ul li:last-child {
+                        border-bottom: none;
+                    }
+    </style>
+}
+
+<h2>Progress</h2>
+
+<p>Status of your background job: <strong><span id="job-status">Waiting to start...</span></strong></p>
+
+<div id="events">
+    <div>
+        <div class="caption">
+            Downloading events
+        </div>
+        <div id="clear"></div>
+    </div>
+    <ul></ul>
+</div>
+
+@section Scripts
+    {
+    <script src="~/lib/signalr/signalr.js"></script>
+    <script type="text/javascript">
+        document.head || (document.head = document.getElementsByTagName('head')[0]);
+        var oldFilename = '';
+        var connection = new signalR.HubConnectionBuilder()
+            .withUrl("/jobprogress")
+            .configureLogging(signalR.LogLevel.Information)
+            .build();
+        connection.on("progress",
+            (percent, fileName) => {
+                //console.log("Percent --> " + percent);
+                changeFavicon("/running.png");
+                document.getElementById("job-status").innerText = `${percent}%`;
+                if (oldFilename !== fileName) {
+                    logEvent("Download Started for " + fileName, true);
+                    oldFilename = fileName;
+                }
+                logEvent("Downloading " + fileName + " @@ " + `${percent}%`);
+            });
+        connection.on("complete",
+            (fileName) => {
+                //console.log("Complete --> " + fileName);
+                //var percent = 100;
+                changeFavicon("/done.png");
+                //logEvent("Downloading " + fileName + " @@ " + `${percent}%`);
+                document.getElementById("job-status").innerText = "Finished!";
+                logEvent("Download Ended for " + fileName, true);
+            });
+        connection.on("error",
+            (fileName, errorMessage) => {
+                console.log("Message --> " + errorMessage);
+                document.getElementById("job-status").innerText = errorMessage;
+                logEvent("Downloading " + fileName + " encountered error :: " + errorMessage, true);
+                //logEvent("Download encountered error :: " + errorMessage, true);
+            });
+        connection.start()
+            .then(_ => connection.invoke("AssociateJob", "@ViewBag.JobId"))
+            .catch(err => console.error(err.toString()));
+
+        changeFavicon("/waiting.png");
+
+        function changeFavicon(src) {
+            var link = document.createElement('link'),
+                oldLink = document.getElementById('dynamic-favicon');
+            link.id = 'dynamic-favicon';
+            link.rel = 'shortcut icon';
+            link.href = src;
+            if (oldLink) {
+                document.head.removeChild(oldLink);
+            }
+            document.head.appendChild(link);
+        }
+
+        function logEvent(eventName, isBold) {
+            var fontBold = isBold ? 'font-weight:bold' : '';
+            var logList = $("#events ul"),
+                newItem = $("<li>", { text: eventName, style: fontBold });
+
+            logList.prepend(newItem);
+        }
+    </script>
+}

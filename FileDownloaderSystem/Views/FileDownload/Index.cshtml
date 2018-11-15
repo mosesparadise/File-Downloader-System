@@ -1,0 +1,111 @@
+﻿@model DownloadSettingViewModel
+@{
+    ViewData["Title"] = "File Download";
+}
+
+@*<h2>Index</h2>*@
+<div class="row">
+    <div class="col-md-12 col-sm-6 col-xs-12">
+        <h2>Start File Downloading Process</h2>
+        <p>To start file downloading, enter Uri of all sources, and click button 'Start' below:</p>
+
+        <div class="panel panel-default">
+            <div class="panel-heading clearfix">
+                <i class="icon-calendar"></i>
+                <h3 class="panel-title">Download Settings</h3>
+            </div>
+            <div class="panel-body">
+                <form asp-action="StartProgress" class="form-horizontal">
+                    <div class="form-group">
+                        <label asp-for="DownloadSources" class="control-label col-sm-2"></label>
+                        <div class="col-sm-10">
+                            <textarea asp-for="DownloadSources" class="form-control" type="text" placeholder="Enter download source one per line" rows="5"></textarea>
+                            <span class="text-danger" asp-validation-for="DownloadSources"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="DestinationPath" class="control-label col-sm-2"></label>
+                        <div class="col-md-10">
+                            <input type="text" asp-for="DestinationPath" class="form-control" placeholder="Enter Absolute Destination Path">
+                            <span class="text-warning"><small>Relative Path</small></span>
+                            <span class="text-danger" asp-validation-for="DestinationPath"></span>
+                        </div>
+                    </div>
+
+
+                    <div class="panel panel-default">
+                        <div class="panel-heading clearfix">
+                            <div class="checkbox">
+                                <label><input asp-for="AuthModel.IsAuthenticationRequired"><strong>Authentication Required?</strong></label>
+                            </div>
+                        </div>
+                        <div id="changeAuthInputs">
+                            <div class="panel-body">
+                                <div class="form-group">
+                                    <label asp-for="AuthModel.Username" class="control-label col-sm-2"></label>
+                                    <div class="col-md-10">
+                                        <input asp-for="AuthModel.Username" class="form-control" placeholder="Enter Username">
+                                        <span class="text-danger" asp-validation-for="AuthModel.Username"></span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="AuthModel.Password" class="control-label col-sm-2"></label>
+                                    <div class="col-md-10">
+                                        <input asp-for="AuthModel.Password" class="form-control" placeholder="Enter Password">
+                                        <span class="text-danger" asp-validation-for="AuthModel.Password"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="BenchmarkSize" class="control-label col-sm-2"></label>
+                        <div class="col-md-10">
+                            <input asp-for="BenchmarkSize" class="form-control" placeholder="Enter Benchmark Size">
+                            <span class="text-warning"><small>In Kilobyte (KB)</small></span>
+                            <span class="text-danger" asp-validation-for="BenchmarkSize"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="BenchmarkSpeed" class="control-label col-sm-2"></label>
+                        <div class="col-md-10">
+                            <input asp-for="BenchmarkSpeed" class="form-control" placeholder="Enter Benchmark Speed">
+                            <span class="text-warning"><small>In KB/s (Kilobyte per Seconds)</small></span>
+                            <span class="text-danger" asp-validation-for="BenchmarkSpeed"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="col-sm-10 col-sm-offset-2">
+                            <!--New div, offset because there is no label -->
+                            <button type="submit" class="btn btn-primary btn-lg">Queue Background Job</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+    {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script type="text/javascript">
+        var form = $('#form'),
+            checkbox = $('#AuthModel_IsAuthenticationRequired'),
+            chAuthBlock = $('#changeAuthInputs');
+        chAuthBlock.hide();
+        checkbox.on('click',
+            function() {
+                if ($(this).is(':checked')) {
+                    chAuthBlock.show();
+                    chAuthBlock.find('input').attr('required', true);
+                } else {
+                    chAuthBlock.hide();
+                    chAuthBlock.find('input').attr('required', false);
+                }
+            });
+    </script>
+}
